@@ -1,0 +1,3 @@
+[submodule "PicasaMetadataImporter.lrplugin/external/lua-table-persistence"]
+	path = PicasaMetadataImporter.lrplugin/external/lua-table-persistence
+	url = https://github.com/hipe/lua-table-persistence.git
