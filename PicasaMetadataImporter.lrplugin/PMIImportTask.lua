@@ -16,38 +16,50 @@ See 'https://github.com/dbarsam/lightroom-picasametadataimporter' for more info.
 ----------------------------------------------------------------------------]]--
 
 -- Access the Lightroom SDK namespaces.
-local LrTasks           = import 'LrTasks'
 local LrDialogs         = import 'LrDialogs'
+local LrErrors          = import 'LrErrors'
 local LrFunctionContext = import 'LrFunctionContext'
 local LrLogger          = import 'LrLogger'
+local LrTasks           = import 'LrTasks'
 
 -- Initialize the logger
 local logger = LrLogger( 'PMIImportTask' )
 logger:enable('print') -- 'print' or 'logfile'
 
 -- Access the PMI SDK namespaces.
-local pmiSelectSourceDialog   = require "PMISelectSourceDialog"
-local pmiSelectMetadataDialog = require "PMISelectMetadataDialog"
-local pmiImporter             = require "PMIImporter"
 local pmiDatabase             = require "PMIDatabase"
+local pmiImporter             = require "PMIImporter"
+local pmiPrefs                = require "PMIPreferenceManager"
+local pmiSelectMetadataDialog = require "PMISelectMetadataDialog"
+local pmiSelectSourceDialog   = require "PMISelectSourceDialog"
+local pmiUtil                 = require "PMIUtil"
 
-local result = pmiSelectSourceDialog.Show()
-if result ~= nil then
-    LrFunctionContext.postAsyncTaskWithContext('PMIImportTask', function(context)
-        LrDialogs.attachErrorDialogToFunctionContext(context)
+LrFunctionContext.postAsyncTaskWithContext('PMIImportTask', function(context)
+    LrDialogs.attachErrorDialogToFunctionContext(context)
 
-        -- Populate the Database
-        if (result.isImport) then
-            pmiDatabase.Import(result.files)
-        else
-            pmiDatabase.Load(result.files[1])
+    if pmiUtil.Any({'ImportAlbum', 'ImportImage', 'ImportVideo'}, function(val) return pmiPrefs.GetPref(val) end) then
+        local result = pmiSelectSourceDialog.Show()
+        if result ~= nil then
+            -- Populate the Database
+            if #(result.files) == 0 then
+                LrErrors.throwUserError(LOC '$$$/PMI/Error/CannotFindFile=<CannotFindFile>')
+            elseif result.isImport and not pmiDatabase.Import(result.files) then
+                LrErrors.throwUserError(LOC('$$$/PMI/Error/CannotFindMetadata=<CannotFindMetadata>', #(result.files)))
+            elseif result.isLoad and not pmiDatabase.Load(result.files[1]) then
+                LrErrors.throwUserError(LOC('$$$/PMI/Error/CannotLoadMetdata=<CannotLoadMetdata>', result.files[1]))
+            end
+            -- Update the Database
+            pmiDatabase.Resolve()
+            -- Get the selection and import
+            local rules = pmiSelectMetadataDialog.Show(pmiDatabase)
+            if rules ~= nil then
+                pmiImporter.Import(pmiDatabase, rules)
+            end
         end
-        pmiDatabase.Resolve()
+    else
+        LrErrors.throwUserError(LOC "$$$/PMI/Error/ImportTypeMissing=<ImportTypeMissing>")
+    end
+end)
 
-        -- Get the selection and import
-        local rules = pmiSelectMetadataDialog.Show(pmiDatabase)
-        if rules ~= nil then
-            pmiImporter.Import(pmiDatabase, rules)
-        end
-    end) 
-end
+
+
