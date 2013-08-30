@@ -17,9 +17,9 @@ See 'https://github.com/dbarsam/lightroom-picasametadataimporter' for more info.
 
 -- Access the Lightroom SDK namespaces.
 local LrApplication     = import 'LrApplication'
-local LrPathUtils       = import 'LrPathUtils'
 local LrFunctionContext = import 'LrFunctionContext'
 local LrLogger          = import 'LrLogger'
+local LrPathUtils       = import 'LrPathUtils'
 
 -- Load the External Modules via 'dofile'
 local extern = LrPathUtils.child( _PLUGIN.path, "external")
