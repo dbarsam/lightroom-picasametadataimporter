@@ -64,6 +64,13 @@ function PMIDatabase.Save(filename)
 end
 
 --[[
+    Query the Database's state
+]]--
+function PMIDatabase.IsEmpty()
+    return next(PMIDatabase.MetaData) == nil
+end
+
+--[[
     Populates the Database from a file
 ]]--
 function PMIDatabase.Load(filename)
@@ -72,6 +79,7 @@ function PMIDatabase.Load(filename)
         PMIDatabase.FileTable = data.ft
         PMIDatabase.MetaData = data.it
     end
+    return not PMIDatabase.IsEmpty()
 end
 
 --[[
@@ -208,7 +216,7 @@ function PMIDatabase.Import(files)
     end)
     pscope:done()
 
-    return next(PMIDatabase.MetaData) == nil
+    return not PMIDatabase.IsEmpty()
 end
 
 --[[ 
@@ -322,6 +330,8 @@ function PMIDatabase.Resolve()
         end
     end)
     pscope:done()
+
+    return not PMIDatabase.IsEmpty()
 end
 
 --[[
@@ -344,7 +354,7 @@ end
 --[[
     Function to return the back filtered keys
     Note:
-        'album' category keys are picassa date
+        'album' category keys are picasa date
         'file'  category keys are sorted by file name
 ]]--
 function PMIDatabase.GetFilteredKeys(categories)
