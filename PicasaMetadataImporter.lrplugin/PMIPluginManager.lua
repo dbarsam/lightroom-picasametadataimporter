@@ -20,6 +20,7 @@ local LrPathUtils = import 'LrPathUtils'
 local LrHttp      = import 'LrHttp'
 local LrView      = import 'LrView'
 local LrLogger    = import 'LrLogger'
+local LrColor     = import 'LrColor'
 
 -- Initialize the logger
 local logger = LrLogger( 'PMIPluginManager' )
@@ -70,7 +71,7 @@ function PMIPluginManager.GetSplashScreenSection( f, properties )
                     },
                     f:static_text {
                         title = LOC '$$$/PMI/PluginManager/SplashScreen/Maintainer=<Maintainer>',
-                        text_color = import 'LrColor'( 0, 0, 1 ),
+                        text_color = LrColor( 0, 0, 1 ),
                         mouse_down = function(self)
                             LrHttp.openUrlInBrowser(LOC '$$$/PMI/PluginManager/SplashScreen/Maintainer=<Maintainer>')
                         end,
@@ -83,7 +84,7 @@ function PMIPluginManager.GetSplashScreenSection( f, properties )
                     },
                     f:static_text {
                         title = LOC '$$$/PMI/PluginManager/SplashScreen/GitHub=<GitHub>',
-                        text_color = import 'LrColor'( 0, 0, 1 ),
+                        text_color = LrColor( 0, 0, 1 ),
                         mouse_down = function(self)
                             LrHttp.openUrlInBrowser(LOC '$$$/PMI/PluginManager/SplashScreen/GitHubSite=<GitHubSite>')
                         end,
@@ -97,7 +98,7 @@ function PMIPluginManager.GetSplashScreenSection( f, properties )
                     f:static_text {
                         title = 'Issue Tracker',
                         font = '<system/small>',
-                        text_color = import 'LrColor'( 0, 0, 1 ),
+                        text_color = LrColor( 0, 0, 1 ),
                         mouse_down = function(self)
                             LrHttp.openUrlInBrowser(LOC '$$$/PMI/PluginManager/SplashScreen/TrackerSite=<TrackerSite>')
                         end,
@@ -246,7 +247,7 @@ function PMIPluginManager.GetAboutSection( f, properties )
         {
             title = 'Lua Table Persistence',
             font = '<system/small>',
-            text_color = import 'LrColor'( 0, 0, 1 ),
+            text_color = LrColor( 0, 0, 1 ),
             mouse_down = function(self)
                 LrHttp.openUrlInBrowser('http://the-color-black.net/blog/LuaTablePersistence')
             end,
@@ -255,7 +256,7 @@ function PMIPluginManager.GetAboutSection( f, properties )
         {
             title = '(GitHub)',
             font = '<system/small>',
-            text_color = import 'LrColor'( 0, 0, 1 ),
+            text_color = LrColor( 0, 0, 1 ),
             mouse_down = function(self)
                 LrHttp.openUrlInBrowser('https://github.com/hipe/lua-table-persistence')
             end,
@@ -293,7 +294,7 @@ function PMIPluginManager.GetAboutSection( f, properties )
             {
                 title = label,
                 font = '<system/small>',
-                text_color = import 'LrColor'( 0, 0, 1 ),
+                text_color = LrColor( 0, 0, 1 ),
                 mouse_down = function(self)
                     LrHttp.openUrlInBrowser(url)
                 end,
