@@ -325,6 +325,11 @@ function PMIDatabase.Resolve()
 
                 if entry ~= nil then
                     entry.lr.id = p:getRawMetadata("uuid")
+                    if p:getRawMetadata("isVideo") then
+                        entry.lr.category = 'video'
+                    else
+                        entry.lr.category = 'image'
+                    end
                 end
             end
         end
