@@ -16,14 +16,14 @@ See 'https://github.com/dbarsam/lightroom-picasametadataimporter' for more info.
 ----------------------------------------------------------------------------]]--
 
 -- Access the Lightroom SDK namespaces.
-local LrPathUtils       = import 'LrPathUtils'
 local LrApplication     = import 'LrApplication'
-local LrProgressScope   = import 'LrProgressScope'
-local LrFunctionContext = import 'LrFunctionContext'
-local LrDialogs         = import 'LrDialogs'
-local LrView            = import 'LrView'
 local LrBinding         = import 'LrBinding'
+local LrDialogs         = import 'LrDialogs'
+local LrFunctionContext = import 'LrFunctionContext'
 local LrLogger          = import 'LrLogger'
+local LrPathUtils       = import 'LrPathUtils'
+local LrProgressScope   = import 'LrProgressScope'
+local LrView            = import 'LrView'
 
 -- Initialize the logger
 local logger = LrLogger( 'PMIImporter' )
@@ -85,18 +85,16 @@ local function showReportDialog(lines)
             f:static_text{
                 title = LOC '$$$/PMI/Importer/Message/Title=<Message>',
                 font = '<system/bold>',
-                enabled = e,
             },
              f:static_text{
                 title = LOC '$$$/PMI/Importer/Message/Body=<Body>',
                 font = '<system>',
-                enabled = e,
             },
             f:scrolled_view {
                 fill_horizonal = 1,
                 font = '<system/small>',
-                width = 700,            
-                height = 580,            
+                width = pmiPrefs.GetPref('ScrollViewWidth'),            
+                height = pmiPrefs.GetPref('ScrollViewHeight'),
                 f:column ( rows )
             }
         }
