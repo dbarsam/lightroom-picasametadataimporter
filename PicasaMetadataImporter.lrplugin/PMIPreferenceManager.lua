@@ -16,27 +16,44 @@ See 'https://github.com/dbarsam/lightroom-picasametadataimporter' for more info.
 ----------------------------------------------------------------------------]]--
 
 -- Access the Lightroom SDK namespaces.
-local LrTasks          = import 'LrTasks'
 local LrDialogs        = import 'LrDialogs'
-local LrView           = import 'LrView'
+local LrLogger         = import 'LrLogger'
 local LrPrefs          = import 'LrPrefs'.prefsForPlugin(_PLUGIN)
 local LrRecursionGuard = import 'LrRecursionGuard'
-local LrLogger         = import 'LrLogger'
+local LrTasks          = import 'LrTasks'
+local LrView           = import 'LrView'
 
 -- Initialize the logger
 local logger = LrLogger( 'PMIPreferenceManager' )
 logger:enable("print") -- "print" or "logfile"
 
 -- Access the PMI SDK namespaces.
+local pmiCollectionsetDialog = require "PMISelectCollectionsetDialog"
 local pmiMetadata            = require "PMIMetadata"
 local pmiTemplateDialog      = require "PMITemplateDialog"
-local pmiCollectionsetDialog = require "PMISelectCollectionsetDialog"
 local pmiUtil                = require "PMIUtil"
 
 --[[
     Define this module
 ]]--
 local PMIPreferenceManager = {}
+
+--[[
+    Enumeration for User Mode
+]]--
+PMIPreferenceManager.UserModes = {
+    Advanced = 'Advanced',
+    Normal   = 'Normal',
+}
+
+--[[
+    Enumeration for Import Type
+]]--
+PMIPreferenceManager.ImportTypes = {
+    Album = 'Album',
+    Image = 'Image',
+    Video = 'Video',
+}
 
 --[[
     Recursion guard for selection
@@ -74,9 +91,22 @@ end
     The Preference Initialization
 ]]--
 function PMIPreferenceManager.InitPreferences()
-    if LrPrefs.UserMode == nil then
-        LrPrefs.UserMode = false
+    if LrPrefs['UserMode'] == nil then
+        LrPrefs['UserMode'] = PMIPreferenceManager.UserModes.Normal
     end   
+    if LrPrefs['ImportImage'] == nil then
+        LrPrefs['ImportImage'] = true
+    end   
+    if LrPrefs['ImportAlbum'] == nil then
+        LrPrefs['ImportAlbum'] = true
+    end   
+    if LrPrefs['ImportVideo'] == nil then
+        LrPrefs['ImportVideo'] = true
+    end 
+    -- scrolled_view seems to be broken in Lr4.
+    -- we need to harcode the height and width
+    LrPrefs['ScrollViewWidth']  = 675
+    LrPrefs['ScrollViewHeight'] = 475 
 end
 
 --[[
@@ -563,12 +593,12 @@ function PMIPreferenceManager.GetPreferencesPanel( f, properties )
                 f:radio_button {
                     title = LOC '$$$/PMI/PreferenceManager/PreferencesPanel/General/UserMode/Normal=<Normal>',
                     value = LrView.bind 'UserMode',
-                    checked_value = false,
+                    checked_value = PMIPreferenceManager.UserModes.Normal,
                 },   
                 f:radio_button {
                     title = LOC '$$$/PMI/PreferenceManager/PreferencesPanel/General/UserMode/Advanced=<Advanced>',
                     value = LrView.bind 'UserMode',
-                    checked_value = true,
+                    checked_value = PMIPreferenceManager.UserModes.Advanced,
                 },                 
             },               
             f:row {
@@ -579,19 +609,17 @@ function PMIPreferenceManager.GetPreferencesPanel( f, properties )
                 }, 
                 f:checkbox {
                     title = LOC '$$$/PMI/PreferenceManager/PreferencesPanel/General/Import/Albums=<Albums>',
-                    value = LrView.bind 'UserMode',
-                    checked_value = false,
+                    value = LrView.bind 'ImportAlbum',
+                    checked_value = true,
                 }, 
-                 
                 f:checkbox {
                     title = LOC '$$$/PMI/PreferenceManager/PreferencesPanel/General/Import/Images=<Images>',
-                    value = LrView.bind 'UserMode',
+                    value = LrView.bind 'ImportImage',
                     checked_value = true,
                 },                 
-                
                 f:checkbox {
                     title = LOC '$$$/PMI/PreferenceManager/PreferencesPanel/General/Import/Videos=<Videos>',
-                    value = LrView.bind 'UserMode',
+                    value = LrView.bind 'ImportVideo',
                     checked_value = true,
                 },                 
             },               
