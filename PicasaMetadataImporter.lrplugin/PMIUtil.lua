@@ -74,6 +74,63 @@ function PMIUtil.Explode(div,str)
 end
 
 --[[
+    'Map' function
+    credit: http://lua-users.org/wiki/FunctionalLibrary
+--]]
+function PMIUtil.Map(values, predicate)
+    predicate = predicate or function(val) return val end
+    local newvalues = {}
+    for i,v in pairs(values) do
+        newvalues[i] = predicate(v)
+    end
+    return newvalues
+end
+
+--[[
+    'Filter' function
+    credit: http://lua-users.org/wiki/FunctionalLibrary
+--]]
+function PMIUtil.Filter(values, predicate, isarray)
+    isarray   = isarray or true
+    predicate = predicate or function(val) return true end
+    filter    = isarray and function(t, k, v) table.insert(t, v) end or function(t, k, v) t[k] = v end
+
+    local newvalues = {}
+    for k,v in pairs(values) do
+        if predicate(v) then
+            filter(newvalues, k,v)
+        end
+    end
+    return newvalues
+end
+
+--[[
+    Evaluates a table and returns true if a single successful evaluation
+]]--
+function PMIUtil.Any(values, predicate) 
+    predicate = predicate or function(val) return true end
+    for _,v in ipairs(values) do
+        if predicate(v) then
+            return true
+        end
+    end
+    return false
+end
+
+--[[
+    Evaluates a table and returns true if all are successful evaluations
+]]--
+function PMIUtil.All(table, predicate) 
+    predicate = predicate or function(val) return true end
+    for _,v in table do
+        if not predicate(v) then
+            return false
+        end
+    end
+    return true
+end
+
+--[[
     Resolves a Path into a Lightroom Collection Set
 ]]--
 function PMIUtil.GetCollectionSet(path)
