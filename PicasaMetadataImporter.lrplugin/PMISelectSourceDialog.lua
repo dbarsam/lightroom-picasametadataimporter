@@ -16,11 +16,11 @@ See 'https://github.com/dbarsam/lightroom-picasametadataimporter' for more info.
 ----------------------------------------------------------------------------]]--
 
 -- Access the Lightroom SDK namespaces.
-local LrFunctionContext = import 'LrFunctionContext'
-local LrFileUtils       = import 'LrFileUtils'
-local LrPathUtils       = import 'LrPathUtils'
 local LrBinding         = import 'LrBinding'
 local LrDialogs         = import 'LrDialogs'
+local LrFileUtils       = import 'LrFileUtils'
+local LrFunctionContext = import 'LrFunctionContext'
+local LrPathUtils       = import 'LrPathUtils'
 local LrView            = import 'LrView'
 
 -- Access the PMI SDK namespaces.
@@ -208,6 +208,7 @@ function IPMSelectSourceDialog.Show()
             local exists = LrFileUtils.exists( props.sourcePath )
             if exists then
                 result.isImport = (exists == 'directory')
+                result.isLoad   = not result.isImport
                 if result.isImport then
                     files = props.isRecursive and LrFileUtils.recursiveFiles( props.sourcePath ) or LrFileUtils.files( props.sourcePath )
                     for file in files do
