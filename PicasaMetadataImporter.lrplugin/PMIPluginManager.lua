@@ -16,11 +16,11 @@ See 'https://github.com/dbarsam/lightroom-picasametadataimporter' for more info.
 ----------------------------------------------------------------------------]]--
 
 -- Access the Lightroom SDK namespaces.
-local LrPathUtils = import 'LrPathUtils'
-local LrHttp      = import 'LrHttp'
-local LrView      = import 'LrView'
-local LrLogger    = import 'LrLogger'
 local LrColor     = import 'LrColor'
+local LrHttp      = import 'LrHttp'
+local LrLogger    = import 'LrLogger'
+local LrPathUtils = import 'LrPathUtils'
+local LrView      = import 'LrView'
 
 -- Initialize the logger
 local logger = LrLogger( 'PMIPluginManager' )
