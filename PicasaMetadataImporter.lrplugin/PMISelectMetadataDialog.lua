@@ -16,12 +16,13 @@ See 'https://github.com/dbarsam/lightroom-picasametadataimporter' for more info.
 ----------------------------------------------------------------------------]]--
 
 -- Access the Lightroom SDK namespaces.
-local LrFunctionContext = import 'LrFunctionContext'
 local LrBinding         = import 'LrBinding'
+local LrColor           = import 'LrColor'
 local LrDialogs         = import 'LrDialogs'
-local LrView            = import 'LrView'
-local LrRecursionGuard  = import 'LrRecursionGuard'
+local LrFunctionContext = import 'LrFunctionContext'
 local LrLogger          = import 'LrLogger'
+local LrRecursionGuard  = import 'LrRecursionGuard'
+local LrView            = import 'LrView'
 
 -- Initialize the logger
 local logger = LrLogger( 'PMISelectMetadataDialog' )
@@ -29,6 +30,7 @@ logger:enable('print') -- 'print' or 'logfile'
 
 -- Access the PMI SDK namespaces.
 local pmiMetadata            = require "PMIMetadata"
+local pmiPrefs               = require "PMIPreferenceManager"
 local pmiUtil                = require "PMIUtil"
 
 --[[
@@ -145,54 +147,23 @@ end
 --[[
     File Row
 ]]--
-local function GetFileRow(f, rkey, rule, binding)
+local function GetFileRow(f, fkey, data, e, binding, view)
     return f:row {
-        margin_horizontal = 30,
-        f:checkbox {
-            title = rkey,
-            size = "mini",
-            value = LrView.bind (binding),
-            width = LrView.share "rkey_width",
-            enabled = e,
-        },            
-        f:static_text {
-            title = rule.name,
-            size = "mini",
-            width = LrView.share "rname_width",
-            enabled = e,
-        },
-        f:static_text {
-            title = rule.value,
-            size = "mini",
-            width = LrView.share "rvalue_width",
-            enabled = e,
-        },                         
-    }                    
-end
-
---[[
-    File Row
-]]--
-local function GetFileRow(f, fkey, data, e, binding)
-    return f:row {
-        margin_horizontal = 30,
+        size = "mini",
         f:checkbox {
             title = fkey,
-            size = "mini",
             value = LrView.bind (binding),
-            width = LrView.share "rkey_width",
+            width = LrView.share ('picasa_metadata_field_width_' .. view),
             enabled = e,
         },            
         f:static_text {
             title = '...',
-            size = "mini",
-            width = LrView.share "rname_width",
+            width = LrView.share ('lightroom_metadata_field_width_' .. view),
             enabled = e,
         },
         f:static_text {
             title = data.pc.name,
-            size = "mini",
-            width = LrView.share "rvalue_width",
+            width = LrView.share ('lightroom_metadata_value_width_' .. view),
             enabled = e,
         },                         
     }                    
@@ -201,26 +172,23 @@ end
 --[[
     Rule Row
 ]]--
-local function GetRuleRow(f, rkey, rule, e, binding)
+local function GetRuleRow(f, rkey, rule, e, binding, view)
     return f:row {
-        margin_horizontal = 30,
+        size = "mini",
         f:checkbox {
             title = rkey,
-            size = "mini",
             value = LrView.bind (binding),
-            width = LrView.share "rkey_width",
+            width = LrView.share ('picasa_metadata_field_width_' .. view),
             enabled = e,
         },            
         f:static_text {
             title = rule.name,
-            size = "mini",
-            width = LrView.share "rname_width",
+            width = LrView.share ('lightroom_metadata_field_width_' .. view),
             enabled = e,
         },
         f:static_text {
             title = rule.value,
-            size = "mini",
-            width = LrView.share "rvalue_width",
+            width = LrView.share ('lightroom_metadata_value_width_' .. view),
             enabled = e,
         },                         
     }                    
@@ -232,85 +200,106 @@ end
 local function GetAlbumView(f, properties, keys, database)
 
     local propkeys = pmiMetadata.MetadataKeys.album
+    local userMode = pmiPrefs.GetPref('UserMode')
 
     properties[propkeys.header] = false
     properties:addObserver( propkeys.header, headerSelected )
 
     local view = {
+        spacing = f:control_spacing(),
+        margin_horizontal = 10,
         f:row {
-            margin_horizontal = 10,
-            spacing = f:label_spacing(),
+            font = '<system/small/bold>',
             f:checkbox {
-                title = LOC '$$$/PMI/SelectMetadataDialog/AlbumView/Header/Name=<Name>',
-                size = 'small',
+                title = LOC '$$$/PMI/SelectMetadataDialog/AlbumView/Header/Title=<Title>',
                 value = LrView.bind(propkeys.header),
-                font = '<system/small/bold>',
-                width = LrView.share 'name_width',
+                width = LrView.share 'picasa_metadata_title_width_album',
             },                              
             f:static_text {
-                title = LOC '$$$/PMI/SelectMetadataDialog/AlbumView/Header/Date=<Date>',
-                font = '<system/small/bold>',
-                width = LrView.share 'date_width',
+                title = LOC '$$$/PMI/SelectMetadataDialog/View/PicasaField=<PicasaField>',
+                width = LrView.share 'picasa_metadata_field_width_album',
             },                       
             f:static_text {
-                title = LOC '$$$/PMI/SelectMetadataDialog/AlbumView/Header/Token=<Token>',
-                font = '<system/small/bold>',
-                width = LrView.share 'token_width',
-            },             
-        },               
+                title = LOC '$$$/PMI/SelectMetadataDialog/View/LightroomField=<LightroomField>',
+                width = LrView.share 'lightroom_metadata_field_width_album',
+            },            
+            f:static_text {
+                title = LOC '$$$/PMI/SelectMetadataDialog/View/LightroomValue=<LightroomValue>',
+                width = LrView.share 'lightroom_metadata_value_width_album',
+            },                       
+        },
     }
 
     for i,akey in ipairs(keys.album) do 
         local data = database.MetaData[akey]
+
+        -- Build the Header Rows
+        local headRows = {
+            size = "mini",
+            spacing = f:label_spacing()
+        }
+        -- Push a Name Checkbox
         local abinding = string.gsub(propkeys.enabled,"%.%+", akey)
         properties[abinding] = false
-        properties:addObserver(abinding, itemSelected)
-
-        local albumRow = f:row {
-            margin_horizontal = 10,
+        properties:addObserver(abinding, itemSelected)        
+        local nameRow = f:row {
             f:checkbox {
                 title = data.pc.name,
-                size = "small",
                 value = LrView.bind (abinding),
-                width = LrView.share "name_width",
-            }, 
-            f:static_text {
-                title = data.pc.date and data.pc.date or "",
-                size = "small",
-                width = LrView.share "date_width",
-            },
-            f:static_text {
-                title = data.pc.token and data.pc.token or "",
-                size = "small",
-                width = LrView.share "token_width",
-            },             
+                width = LrView.share 'picasa_metadata_title_width_album',
+            }                    
         }
-        table.insert(view, albumRow)
+        table.insert(headRows,nameRow)
+        -- Push Debug Information
+        if (userMode == pmiPrefs.UserModes.Advanced) then
+            local debugColumn = f:column {
+                spacing = f:label_spacing(),
+                f:static_text {
+                    title = data.pc.date and data.pc.date or LOC "$$$/PMI/SelectMetadataDialog/View/Error/NoPicasaAlbumDate=<No Picasa Album Date>",
+                    width = LrView.share 'picasa_metadata_title_width_album',
+                },
+                f:static_text {
+                    title = data.pc.token and data.pc.token or LOC "$$$/PMI/SelectMetadataDialog/View/Error/NoPicasaAlbumId=<No Picasa Album Id>",
+                    width = LrView.share 'picasa_metadata_title_width_album',
+                }
+            }
+            table.insert(headRows,debugColumn)
+        end
 
+        -- Build the Data Rows
+        local dataRows = {
+            spacing = f:label_spacing()
+        }
+        -- Push the Album's Rule Rows
         for rkey,rule in pairs(data.lr.rules) do      
             if rule.enabled then
                 local rbinding = string.gsub(propkeys.enabled,"%.%+", akey .. "_" .. rkey) or 'nil'
                 properties[rbinding] = false
                 properties:addObserver(rbinding, ruleSelected)
-                table.insert(view, GetRuleRow(f, rkey, rule, true, rbinding))
+                table.insert(dataRows, GetRuleRow(f, rkey, rule, true, rbinding, 'album'))
             end
         end   
-
+        -- Push the Album's File Rows
         for _,fkey in ipairs(data.pmi.files) do      
             local idata = database.MetaData[fkey]
             local e = idata.lr.id ~= nil
             local ibinding = e and string.gsub(propkeys.enabled,"%.%+", akey .. "_" .. fkey) or 'nil'
             properties[ibinding] = false
             properties:addObserver(ibinding, ruleSelected)
-            table.insert(view, GetFileRow(f, 'file', idata, e, ibinding))
+            table.insert(dataRows, GetFileRow(f, 'file', idata, e, ibinding, 'album'))
         end
 
-        local separator = f:row {
-            margin_horizontal = 10,
-            f:separator {
-                fill_horizontal = 1,
-            },
+        -- Final Album Row
+        local albumRow = f:row {
+            f:column( headRows ),
+            f:column( dataRows )
         }
+        table.insert(view, albumRow)
+
+        -- Push the Separator
+        local separator = f:row {
+            f:separator { fill_horizontal = 1 },
+        }        
         table.insert(view, separator)
     end
 
@@ -322,82 +311,107 @@ end
 ]]--
 local function GetFileView(f, properties, keys, database)
     local propkeys = pmiMetadata.MetadataKeys.file
+    local userMode = pmiPrefs.GetPref('UserMode')
 
     properties[propkeys.header] = false
     properties:addObserver( propkeys.header, headerSelected )
 
     local view = {    
         margin_horizontal = 10,
-        spacing = f:label_spacing(),
+        fill_horizontal = 1,
+        spacing = f:control_spacing(),
         f:row {
-            margin_horizontal = 10,
+            fill_horizontal = 1,
+            font = '<system/small/bold>',
             f:checkbox {
-                title = LOC '$$$/PMI/SelectMetadataDialog/FileView/Header/Name=<Name>',
-                size = 'small',
+                title = LOC '$$$/PMI/SelectMetadataDialog/FileView/Header/Title=<Title>',
                 value = LrView.bind(propkeys.header),
-                font = '<system/small/bold>',
-                width = LrView.share 'name_width',
-            },                              
+                width = LrView.share 'picasa_metadata_title_width_file',
+            },              
             f:static_text {
-                title = LOC '$$$/PMI/SelectMetadataDialog/FileView/Header/Album=<Album>',
-                title = 'Picasa Album',
-                font = '<system/small/bold>',
-                width = LrView.share 'token_width',
-            },
+                title = LOC '$$$/PMI/SelectMetadataDialog/View/PicasaField=<PicasaField>',
+                width = LrView.share 'picasa_metadata_field_width_file',
+            },                       
             f:static_text {
-                title = LOC '$$$/PMI/SelectMetadataDialog/FileView/Header/Token=<Token>',
-                font = '<system/small/bold>',
-                width = LrView.share 'uuid_width',
-            },                            
-        },              
+                title = LOC '$$$/PMI/SelectMetadataDialog/View/LightroomField=<LightroomField>',
+                width = LrView.share 'lightroom_metadata_field_width_file',
+            },            
+            f:static_text {
+                title = LOC '$$$/PMI/SelectMetadataDialog/View/LightroomValue=<LightroomValue>',
+                width = LrView.share 'lightroom_metadata_value_width_file',
+            },                       
+        }
     }
+
     for i,fkey in ipairs(keys.file) do 
         local data = database.MetaData[fkey]
         local e = data.lr.id ~= nil
+
+        -- Build the Header Rows
+        local headRows = {
+            size = "mini",
+            spacing = f:label_spacing()
+        }
+        -- Push a Name Checkbox
         local fbinding = e and string.gsub(propkeys.enabled,"%.%+", fkey) or 'nil'
         properties[fbinding] = false
-        properties:addObserver(fbinding, itemSelected)
-
-        local fileRow = f:row {
-            margin_horizontal = 10,
-            spacing = f:label_spacing(),
+        properties:addObserver(fbinding, itemSelected)        
+        local nameRow = f:row {
             f:checkbox {
                 title = data.pc.name,
-                size = "mini",
                 value = LrView.bind (fbinding),
-                width = LrView.share "name_width",
+                width = LrView.share 'picasa_metadata_title_width_file',
                 enabled = e,
-            },   
-            f:static_text {
-                title = data.pc.albums and data.pc.albums or "",
-                size = "mini",
-                width = LrView.share "token_width",
-                enabled = e,
-            },             
-            f:static_text {
-                title = data.lr.id and data.lr.id or "",
-                size = "mini",
-                width = LrView.share "uuid_width",
-                enabled = e,
-            },             
-        }            
-        table.insert(view, fileRow)
+            },              
+        }
+        table.insert(headRows,nameRow)
+        -- Push Debug Information
+        if (userMode == pmiPrefs.UserModes.Advanced) then
+            local debugColumn = f:column {
+                --margin_horizontal = 16,
+                spacing = f:label_spacing(),
+                f:static_text {
+                    title = data.lr.id and data.lr.id or LOC "$$$/PMI/SelectMetadataDialog/View/Error/FileNotFound=<File Not Found>",
+                    enabled = e,
+                    width = LrView.share 'picasa_metadata_title_width_file',
+                },             
+                f:static_text {
+                    title = data.pc.albums and data.pc.albums or LOC "$$$/PMI/SelectMetadataDialog/View/Error/NoPicasaAlbum=<No Picasa Album>",
+                    enabled = e,
+                    width = LrView.share 'picasa_metadata_title_width_file',
+                }
+            }
+            table.insert(headRows, debugColumn)
+        end
+
+        -- Build the Data Rows
+        local dataRows = {
+            spacing = f:label_spacing()
+        }
+        -- Push the File's Rule Rows
         for rkey,rule in pairs(data.lr.rules) do      
             if rule.enabled then
                 local rbinding = e and string.gsub(propkeys.enabled,"%.%+", fkey .. "_" .. rkey) or 'nil'
                 properties[rbinding] = false
                 properties:addObserver(rbinding, ruleSelected)
-                table.insert(view, GetRuleRow(f, rkey, rule, e, rbinding))
+                table.insert(dataRows, GetRuleRow(f, rkey, rule, e, rbinding, 'file'))
             end
-        end   
-        local separator = f:row {
-            margin_horizontal = 10,
-            f:separator {
-                fill_horizontal = 1,
-            },
+        end
+
+        -- Final File Row
+        local fileRow = f:row {
+            f:column( headRows ),
+            f:column( dataRows )
         }
-        table.insert(view, separator)
+        table.insert(view, fileRow)
+
+        -- Push the Separator
+        local separator = f:row {
+            f:separator { fill_horizontal = 1, },
+        }        
+        table.insert(view, separator)        
     end    
+    
     return view
 end
 
@@ -407,6 +421,8 @@ end
 function PMISelectMetadataDialog.Show(database)
 
     return LrFunctionContext.callWithContext( 'PMISelectMetadataDialog.Show', function( context )
+
+        local userMode = pmiPrefs.GetPref('UserMode')
 
         local filekeymap = {}
 
@@ -418,50 +434,106 @@ function PMISelectMetadataDialog.Show(database)
         -- Get the filtered keys from the database
         local keys = database.GetFilteredKeys({'album', 'file'})
 
+         -- Apply User Preferences filters
+        local filterApplied = false
+        if not pmiPrefs.GetPref('ImportAlbum') then
+            local precount = #keys.album
+            keys.album = {}
+            if not filterApplied then
+                filterApplied = precount ~= #keys.album
+            end
+        end
+        if not pmiPrefs.GetPref('ImportImage') then
+            local precount = #keys.file
+            keys.file = pmiUtil.Filter(keys.file, function(key) return database.MetaData[key].lr.category ~= 'image' end)
+            if not filterApplied then
+                filterApplied = precount ~= #keys.file
+            end
+        end
+        if not pmiPrefs.GetPref('ImportVideo') then
+            local precount = #keys.file
+            keys.file = pmiUtil.Filter(keys.file, function(key) return database.MetaData[key].lr.category ~= 'video' end)
+            if not filterApplied then
+                filterApplied = precount ~= #keys.file
+            end
+        end
+
         -- Build the Primary View
-        local c = f:tab_view {
-            f:tab_view_item {
+        local view = {
+            spacing = f:dialog_spacing(),
+            f:row {
+                f:static_text{
+                    title = LOC '$$$/PMI/SelectMetadataDialog/Message/Title=<Message>',
+                    font = '<system/bold>',
+                },
+            },
+            f:row {
+                f:static_text {
+                    title = LOC '$$$/PMI/SelectMetadataDialog/Message/Body=<Body>',
+                    font = '<system>',
+                },
+                f:static_text
+                {
+                    fill_horizontal = 1,
+                    title = LOC '$$$/PMI/SelectMetadataDialog/View/Warning/FilterActive=<FilterActive>',
+                    text_color = LrColor( 1, 0, 0 ),
+                    font = '<system>',
+                    alignment = 'right',
+                    visible = filterApplied
+                }
+            }
+        }
+
+        local subviews = {}
+        if #keys.album > 0 then
+            table.insert(subviews, {
                 identifier = LOC '$$$/PMI/Misc/Albums=<Albums>',
                 title = LOC '$$$/PMI/Misc/Albums=<Albums>',
                 f:scrolled_view {
-                    fill_horizonal = 1,
-                    width = 700,            
-                    height = 600,            
-                    spacing = f:control_spacing(),
+                    width = pmiPrefs.GetPref('ScrollViewWidth'),            
+                    height = pmiPrefs.GetPref('ScrollViewHeight'),
                     bind_to_object = props,
                     f:column ( GetAlbumView(f, props, keys, database) ),
                 },
-            },
-            f:tab_view_item {
+            })            
+        end
+        if #keys.file > 0 then
+            table.insert(subviews, {
                 identifier = LOC '$$$/PMI/Misc/Files=<Files>',
                 title = LOC '$$$/PMI/Misc/Files=<Files>',
-                title = "Images",
                 f:scrolled_view {
-                    spacing = f:label_spacing(),
-                    fill_horizonal = 1,
-                    width = 700,            
-                    height = 600,            
-                    spacing = f:control_spacing(),
+                    width = pmiPrefs.GetPref('ScrollViewWidth'),            
+                    height = pmiPrefs.GetPref('ScrollViewHeight'),
                     bind_to_object = props,
                     f:column ( GetFileView(f, props, keys, database) ),
                 },
-            },
-        }
+            })
+        end
+        if #subviews > 1 then
+            local tabviews = pmiUtil.Map(subviews, function(v) return f:tab_view_item(v) end)
+            table.insert(view, f:tab_view(tabviews))
+        else
+            table.insert(view, f:view(subviews[1]))
+        end
+        local c = f:column(view)
 
         -- Build the Accessory View
-        local a = f:row {
-            f:push_button {
-                title = LOC '$$$/PMI/SelectMetadataDialog/Accessory=<Accessory>',
-                action = function() database.Save() end,
+        local a = nil
+        if (userMode == pmiPrefs.UserModes.Advanced) then
+            a = f:row {
+                f:push_button {
+                    title = LOC '$$$/PMI/SelectMetadataDialog/Accessory=<Accessory>',
+                    action = function() database.Save() end,
+                }
             }
-        }
+        end
 
         -- Launch the actual dialog...
         local dialogResult = LrDialogs.presentModalDialog {
             title = LOC '$$$/PMI/SelectMetadataDialog/Title=<Title>',
             contents = c,
             accessoryView = a,
-            resizable = true,
+            resizable = false,
             actionVerb = LOC '$$$/PMI/SelectMetadataDialog/Action=<Action>',
         }
 
