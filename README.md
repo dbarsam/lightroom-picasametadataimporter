@@ -1,5 +1,4 @@
 # lightroom-picasametadataimporter
------
 
 This plug-in does not import files from Picasa to Lightroom.  Instead this plug-in extracts Picasa metadata from one or more picasa.ini files created by Picasa and writes the metadata to the Lightroom catalogue using the Lightroom API.
 
@@ -10,26 +9,22 @@ The plug-in uses filenames to match a file in Picasa to a file in Lightroom.  If
 ## Supported Metadata
 The imported metadata is written to existing Lightroom metadata fields as defined by the Lightroom API.  Custom metadata fields are not created.  This plug-in can read the following Picasa metadata and write the following Lightroom metadata:
 
-| Picasa  | Lightroom           |                      |                      |
-|---------|---------------------|----------------------|----------------------|
-| caption | additionalModelInfo | creatorStateProvince | minorModelAge        |
-| star    | caption             | creatorUrl           | modelAge             |
-|         | city                | dateCreated          | modelReleaseID       |
-|         | codeOfOrgShown      | descriptionWriter    | modelReleaseStatus   |
-|         | colorNameForLabel   | event                | nameOfOrgShown       |
-|         | copyName            | gpsAltitude          | personShown          |
-|         | copyright           | headline             | pickStatus           |
-|         | copyrightInfoUrl    | instructions         | propertyReleaseID    |
-|         | copyrightState      | intellectualGenre    | propertyReleaseStatu |
-|         | country             | iptcCategory         | provider             |
-|         | creator             | iptcOtherCategories  | rating               |
-|         | creatorAddress      | iptcSubjectCode      | rightsUsageTerms     |
-|         | creatorCity         | isoCountryCode       | scene                |
-|         | creatorCountry      | jobIdentifier        | source               |
-|         | creatorEmail        | label                | sourceType           |
-|         | creatorJobTitle     | location             | stateProvince        |
-|         | creatorPhone        | maxAvailHeight       | title                |
-|         | creatorPostalCode   | maxAvailWidth        |                      |
+| Picasa  | Lightroom           |                      |                     |                      |
+|---------|---------------------|----------------------|---------------------|----------------------|
+| caption | additionalModelInfo | creatorEmail         | iptcOtherCategories | pickStatus           |
+| star    | caption             | creatorJobTitle      | iptcSubjectCode     | propertyReleaseID    |
+|         | city                | creatorPhone         | isoCountryCode      | propertyReleaseStatu |
+|         | codeOfOrgShown      | creatorPostalCode    | jobIdentifier       | provider             |
+|         | colorNameForLabel   | creatorStateProvince | label               | rating               |
+|         | copyName            | creatorUrl           | location            | rightsUsageTerms     |
+|         | copyright           | dateCreated          | maxAvailHeight      | scene                |
+|         | copyrightInfoUrl    | descriptionWriter    | maxAvailWidth       | source               |
+|         | copyrightState      | event                | minorModelAge       | sourceType           |
+|         | country             | gpsAltitude          | modelAge            | stateProvince        |
+|         | creator             | headline             | modelReleaseID      | title                |
+|         | creatorAddress      | instructions         | modelReleaseStatus  |                      |
+|         | creatorCity         | intellectualGenre    | nameOfOrgShown      |                      |
+|         | creatorCountry      | iptcCategory         | personShown         |                      |
 
 ## External Code
 This plug-in uses third party code listed below:
