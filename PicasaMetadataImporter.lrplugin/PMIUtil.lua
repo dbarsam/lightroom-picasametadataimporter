@@ -47,7 +47,7 @@ end
     Creates a Table from a file
 ]]--
 function PMIUtil.Load(filename)
-    return persitence and persistence.load(filename) or nil
+    return persistence and persistence.load(filename) or nil
 end
 
 --[[
