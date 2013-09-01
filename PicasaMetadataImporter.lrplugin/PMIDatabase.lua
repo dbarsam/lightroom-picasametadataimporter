@@ -67,7 +67,7 @@ end
     Query the Database's state
 ]]--
 function PMIDatabase.IsEmpty()
-    return next(PMIDatabase.MetaData) == nil
+    return PMIDatabase.MetaData == nil or next(PMIDatabase.MetaData) == nil
 end
 
 --[[
