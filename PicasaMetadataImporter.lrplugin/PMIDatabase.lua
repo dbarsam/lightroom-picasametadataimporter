@@ -304,22 +304,20 @@ function PMIDatabase.Resolve()
                 -- Find the Files in Album
                 v.pmi.files = ResolveAlbumFiles(v.pc.token)
             elseif v.pmi.category == 'file' then
-                filelookup[v.pc.name] = v
+                filelookup[v.pc.name:lower()] = v
                 table.insert(sd, {criteria = 'filename', operation = 'beginsWith', value = v.pc.name, value2 = "",})
             end
         end
 
         if #sd > 0 then
-            i = 0
             sd.combine = 'union'
             pscope:setPortionComplete(0, #PMIDatabase.MetaData)
             pscope:setCaption(LOC('$$$/PMI/Database/Resolve/Querying=<Querying>'));
             local files = catalog:findPhotos { searchDesc = sd }
-            for i,p in ipairs(files) do 
+            for i, p in ipairs(files) do 
                 local name = p:getFormattedMetadata("fileName")
-                local entry = filelookup[name]
+                local entry = filelookup[name:lower()]
 
-                i = i+1
                 pscope:setPortionComplete(i, #files)
                 pscope:setCaption(string.format('%s %s...', LOC '$$$/PMI/Database/Resolve/ProgressScope=<ProgressScope>', name))
 
