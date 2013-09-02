@@ -46,6 +46,7 @@ function PMIDatabase.Save(filename)
         data.version = 1
         data.ft = PMIDatabase.FileTable
         data.it = PMIDatabase.MetaData
+        data.mf = PMIDatabase.MissingFiles
         pmiUtil.Save(filename, data)
     else
         local path = LrDialogs.runSavePanel {
@@ -78,6 +79,7 @@ function PMIDatabase.Load(filename)
     if data ~= nil and data.version == 1 then
         PMIDatabase.FileTable = data.ft
         PMIDatabase.MetaData = data.it
+        PMIDatabase.MissingFiles = data.mf
     end
     return not PMIDatabase.IsEmpty()
 end
@@ -117,6 +119,7 @@ function PMIDatabase.Import(files)
     -- Tables of the Database
     PMIDatabase.FileTable = files    
     PMIDatabase.MetaData = {}
+    PMIDatabase.MissingFiles = {}
 
     pscope = LrProgressScope( {title = LOC('$$$/PMI/Database/Import/ProgressScope=<ProgressScope>')} )
     pscope:setCancelable(true)
@@ -157,7 +160,7 @@ function PMIDatabase.Import(files)
                         entry = nil
                     else
                         -- Album or File and start a new entry with quasi unique key
-                        local hkey = string.gsub(f .. header, '%W', '')
+                        local hkey = string.gsub(f .. header, '%W', ''):lower()
 
                         -- Albums can be referenced in multiple files. Use the first file as the databse key
                         local album = header:match("^%.album:(.*)$")
@@ -331,6 +334,18 @@ function PMIDatabase.Resolve()
                 end
             end
         end
+
+        -- Filter Missing Files into a separate list
+        PMIDatabase.MissingFiles = {}
+        i = 0
+        for k, v in pairs(filelookup) do 
+            pscope:setPortionComplete(i, #filelookup)
+            pscope:setCaption(string.format('%s %s...', LOC '$$$/PMI/Database/Resolve/ProgressScope=<ProgressScope>', k))
+            if v.lr.id == nil then
+                table.insert(PMIDatabase.MissingFiles, v.pc.name)
+            end
+            i = i+1
+        end        
     end)
     pscope:done()
 
@@ -379,7 +394,7 @@ function PMIDatabase.GetFilteredKeys(categories)
     end
     if keys.file ~= nil then
         table.sort(keys.file, function(l,r) 
-            return PMIDatabase.MetaData[l].pc.name ~= nil and PMIDatabase.MetaData[r].pc.name ~= nil and PMIDatabase.MetaData[l].pc.name:lower() > PMIDatabase.MetaData[r].pc.name:lower()
+            return PMIDatabase.MetaData[l].pc.name ~= nil and PMIDatabase.MetaData[r].pc.name ~= nil and PMIDatabase.MetaData[l].pc.name > PMIDatabase.MetaData[r].pc.name
         end)
     end
 
