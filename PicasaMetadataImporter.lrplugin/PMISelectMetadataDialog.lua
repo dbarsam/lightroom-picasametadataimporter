@@ -59,7 +59,7 @@ local function headerSelected(propertyTable, key, value)
             if key == propkeys.album.header then
                 regex = propkeys.album.enabled
             elseif key == propkeys.file.header then
-                regex = propkeys.album.enabled
+                regex = propkeys.file.enabled
             end
 
             if regex ~= nil then 
