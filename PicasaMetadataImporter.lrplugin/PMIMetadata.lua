@@ -58,6 +58,7 @@ PMIMetadata.MetadataKeys = {
             header   = 'Metadata_FileHeader',
             name     = 'Metadata_File_.+',
             enabled  = 'Metadata_File_.+_enabled',
+            selected = 'Metadata_File_.+_selected',
             template = 'Metadata_File_.+_template',
         },
         album = 
@@ -65,6 +66,7 @@ PMIMetadata.MetadataKeys = {
             header   = 'Metadata_AlbumHeader',
             name     = 'Metadata_Album_.+',
             enabled  = 'Metadata_Album_.+_enabled',
+            selected = 'Metadata_Album_.+_selected',
             template = 'Metadata_Album_.+_template',
         }
 }

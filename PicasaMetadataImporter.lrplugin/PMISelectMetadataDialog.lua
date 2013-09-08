@@ -57,9 +57,9 @@ local function headerSelected(propertyTable, key, value)
             propkeys = pmiMetadata.MetadataKeys
             local regex = nil
             if key == propkeys.album.header then
-                regex = propkeys.album.enabled
+                regex = propkeys.album.selected
             elseif key == propkeys.file.header then
-                regex = propkeys.file.enabled
+                regex = propkeys.file.selected
             end
 
             if regex ~= nil then 
@@ -82,19 +82,19 @@ end
 ]]--
 local function itemSelected(propertyTable, key, value)
     local propkeys = nil
-    if key:match(pmiMetadata.MetadataKeys.album.enabled) then
+    if key:match(pmiMetadata.MetadataKeys.album.selected) then
         propkeys = pmiMetadata.MetadataKeys.album
-    elseif key:match(pmiMetadata.MetadataKeys.file.enabled) then
+    elseif key:match(pmiMetadata.MetadataKeys.file.selected) then
         propkeys = pmiMetadata.MetadataKeys.file
     end
     if value == nil then
         propertyTable[propkeys.header] = nil
     else
-        local pregex = string.gsub(propkeys.enabled,"%.%+", "([^_]+)")
+        local pregex = string.gsub(propkeys.selected,"%.%+", "([^_]+)")
         local itemkey = key:match(pregex)
         if itemkey ~= nil then
             local parent_value = value
-            local cregex = string.gsub(propkeys.enabled,"%.%+", itemkey .."_([^_]+)")
+            local cregex = string.gsub(propkeys.selected,"%.%+", itemkey .."_([^_]+)")
             for k,v in propertyTable:pairs() do
                 if k:match(cregex) then
                     recursionGuard.rule:performWithGuard (function ()
@@ -119,15 +119,15 @@ end
 local function ruleSelected(propertyTable, key, value)
     recursionGuard.rule:performWithGuard (function ()
         local propkeys = nil
-        if key:match(pmiMetadata.MetadataKeys.album.enabled) then
+        if key:match(pmiMetadata.MetadataKeys.album.selected) then
             propkeys = pmiMetadata.MetadataKeys.album
-        elseif key:match(pmiMetadata.MetadataKeys.file.enabled) then
+        elseif key:match(pmiMetadata.MetadataKeys.file.selected) then
             propkeys = pmiMetadata.MetadataKeys.file
         end
-        regex = string.gsub(propkeys.enabled,"%.%+", "([^_]+)_([^_]+)")
+        regex = string.gsub(propkeys.selected,"%.%+", "([^_]+)_([^_]+)")
         pkey, ckey = key:match(regex)
         if pkey ~= nil and ckey ~= nil then
-            regex = string.gsub(propkeys.enabled,"%.%+", pkey .. "_([^_]+)")
+            regex = string.gsub(propkeys.selected,"%.%+", pkey .. "_([^_]+)")
             local pvalue = value
             for k,v in propertyTable:pairs() do
                 if k ~= key and v ~= value and k:match(regex) then
@@ -136,7 +136,7 @@ local function ruleSelected(propertyTable, key, value)
                 end
             end                    
             recursionGuard.item:performWithGuard (function ()
-                propertyTable[string.gsub(propkeys.enabled,"%.%+", pkey)] = pvalue
+                propertyTable[string.gsub(propkeys.selected,"%.%+", pkey)] = pvalue
             end)
         end
     end)
@@ -237,7 +237,7 @@ local function GetAlbumView(f, properties, keys, database)
             spacing = f:label_spacing()
         }
         -- Push a Name Checkbox
-        local abinding = string.gsub(propkeys.enabled,"%.%+", akey)
+        local abinding = string.gsub(propkeys.selected,"%.%+", akey)
         properties[abinding] = false
         properties:addObserver(abinding, itemSelected)        
         local nameRow = f:row {
@@ -271,7 +271,7 @@ local function GetAlbumView(f, properties, keys, database)
         -- Push the Album's Rule Rows
         for rkey,rule in pairs(data.lr.rules) do      
             if rule.enabled then
-                local rbinding = string.gsub(propkeys.enabled,"%.%+", akey .. "_" .. rkey) or 'nil'
+                local rbinding = string.gsub(propkeys.selected,"%.%+", akey .. "_" .. rkey) or 'nil'
                 properties[rbinding] = false
                 properties:addObserver(rbinding, ruleSelected)
                 table.insert(dataRows, GetRuleRow(f, rkey, rule, true, rbinding, 'album'))
@@ -281,7 +281,7 @@ local function GetAlbumView(f, properties, keys, database)
         for _,fkey in ipairs(data.pmi.files) do      
             local idata = database.MetaData[fkey]
             local e = idata.lr.id ~= nil
-            local ibinding = e and string.gsub(propkeys.enabled,"%.%+", akey .. "_" .. fkey) or 'nil'
+            local ibinding = e and string.gsub(propkeys.selected,"%.%+", akey .. "_" .. fkey) or 'nil'
             properties[ibinding] = false
             properties:addObserver(ibinding, ruleSelected)
             table.insert(dataRows, GetFileRow(f, 'file', idata, e, ibinding, 'album'))
@@ -352,7 +352,7 @@ local function GetFileView(f, properties, keys, database)
             spacing = f:label_spacing()
         }
         -- Push a Name Checkbox
-        local fbinding = e and string.gsub(propkeys.enabled,"%.%+", fkey) or 'nil'
+        local fbinding = e and string.gsub(propkeys.selected,"%.%+", fkey) or 'nil'
         properties[fbinding] = false
         properties:addObserver(fbinding, itemSelected)        
         local nameRow = f:row {
@@ -390,7 +390,7 @@ local function GetFileView(f, properties, keys, database)
         -- Push the File's Rule Rows
         for rkey,rule in pairs(data.lr.rules) do      
             if rule.enabled then
-                local rbinding = e and string.gsub(propkeys.enabled,"%.%+", fkey .. "_" .. rkey) or 'nil'
+                local rbinding = e and string.gsub(propkeys.selected,"%.%+", fkey .. "_" .. rkey) or 'nil'
                 properties[rbinding] = false
                 properties:addObserver(rbinding, ruleSelected)
                 table.insert(dataRows, GetRuleRow(f, rkey, rule, e, rbinding, 'file'))
@@ -541,7 +541,7 @@ function PMISelectMetadataDialog.Show(database)
             local result = {}
             for k, v in props:pairs() do
                 if v == true then
-                    category, key, rule = k:match("Metadata_([^_]+)_([^_]+)_([^_]+)_enabled")
+                    category, key, rule = k:match("Metadata_([^_]+)_([^_]+)_([^_]+)_selected")
                     if category ~= nil and key ~= nil and rule ~= nil then
                         if result[category] == nil then
                             result[category] = {}
