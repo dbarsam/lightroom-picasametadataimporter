@@ -90,27 +90,25 @@ local function itemSelected(propertyTable, key, value)
     if value == nil then
         propertyTable[propkeys.header] = nil
     else
-        recursionGuard.item:performWithGuard (function ()
-            local pregex = string.gsub(propkeys.enabled,"%.%+", "([^_]+)")
-            local itemkey = key:match(pregex)
-            if itemkey ~= nil then
-                local parent_value = value
-                local cregex = string.gsub(propkeys.enabled,"%.%+", itemkey .."_([^_]+)")
-                for k,v in propertyTable:pairs() do
-                    if k:match(cregex) then
-                        recursionGuard.rule:performWithGuard (function ()
-                            propertyTable[k] = value
-                        end)
-                    end
-                    if parent_value ~= nil and k ~= key and v~=value and k:match(pregex) then
-                        parent_value = nil
-                    end
+        local pregex = string.gsub(propkeys.enabled,"%.%+", "([^_]+)")
+        local itemkey = key:match(pregex)
+        if itemkey ~= nil then
+            local parent_value = value
+            local cregex = string.gsub(propkeys.enabled,"%.%+", itemkey .."_([^_]+)")
+            for k,v in propertyTable:pairs() do
+                if k:match(cregex) then
+                    recursionGuard.rule:performWithGuard (function ()
+                        propertyTable[k] = value
+                    end)
                 end
-                recursionGuard.header:performWithGuard (function ()
-                    propertyTable[propkeys.header] = parent_value
-                end)
+                if parent_value ~= nil and k ~= key and v~=value and k:match(pregex) then
+                    parent_value = nil
+                end
             end
-        end)
+            recursionGuard.header:performWithGuard (function ()
+                propertyTable[propkeys.header] = parent_value
+            end)
+        end
     end
 end
 
@@ -310,6 +308,7 @@ end
     The File View
 ]]--
 local function GetFileView(f, properties, keys, database)
+
     local propkeys = pmiMetadata.MetadataKeys.file
     local userMode = pmiPrefs.GetPref('UserMode')
 
