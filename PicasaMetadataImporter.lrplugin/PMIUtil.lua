@@ -74,6 +74,14 @@ function PMIUtil.Explode(div,str)
 end
 
 --[[
+    Title Case a string
+    credit: http://lua-users.org/wiki/StringRecipes
+]]--
+function PMIUtil.TitleCase(text) 
+    return text:gsub("(%a)([%w_']*)", function(first, rest) return first:upper()..rest:lower() end)
+end
+
+--[[
     'Map' function
     credit: http://lua-users.org/wiki/FunctionalLibrary
 --]]
