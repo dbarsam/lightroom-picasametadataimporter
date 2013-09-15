@@ -28,9 +28,10 @@ local logger = LrLogger( 'PMIDatabase' )
 logger:enable("print")  -- "print" or "logfile"
 
 -- Access the PMI SDK namespaces.
-local pmiPrefs    = require "PMIPreferenceManager"
-local pmiMetadata = require "PMIMetadata"
-local pmiUtil     = require "PMIUtil"
+local pmiMetadata         = require "PMIMetadata"
+local pmiPrefs            = require "PMIPreferenceManager"
+local pmiSelectFileDialog = require "PMISelectFileDialog"
+local pmiUtil             = require "PMIUtil"
 
 --[[
     Define this module
@@ -65,13 +66,6 @@ function PMIDatabase.Save(filename)
 end
 
 --[[
-    Query the Database's state
-]]--
-function PMIDatabase.IsEmpty()
-    return PMIDatabase.MetaData == nil or next(PMIDatabase.MetaData) == nil
-end
-
---[[
     Populates the Database from a file
 ]]--
 function PMIDatabase.Load(filename)
@@ -82,6 +76,101 @@ function PMIDatabase.Load(filename)
         PMIDatabase.MissingFiles = data.mf
     end
     return not PMIDatabase.IsEmpty()
+end
+
+--[[
+    Manually selects the lightroom file to associate with a database key
+--]]
+function PMIDatabase.SelectLightroomFile(key)
+    local changed = false; 
+    local entry = PMIDatabase.MetaData[key]
+    if entry ~= nil and entry.pmi.category == 'file' then
+        local file = pmiSelectFileDialog.Show(entry.pc.name)
+        if file ~= nil then
+            changed = PMIDatabase.SetFile(key, file)
+        end
+    end
+    return changed
+end
+
+--[[
+    Manually reset the lightroom file to the default association of a database keye
+--]]
+function PMIDatabase.ResetLightroomFile(key)
+    local changed = false; 
+    local entry = PMIDatabase.MetaData[key]
+    if entry ~= nil and entry.pmi.category == 'file' then
+        local catalog = LrApplication.activeCatalog ()
+        local files = catalog:findPhotos {
+            searchDesc = {
+                {
+                    criteria = "filename",
+                    operation = "beginsWith",
+                    value = entry.pc.name,
+                    value2 = "",
+                },
+                combine = "intersect",
+            }
+        }
+        local file = (files ~= nil and #files > 0) and files[1] or nil
+        changed = PMIDatabase.SetFile(key, file)
+
+        -- Remove the Lightroom name field to reset the database entry
+        entry.lr.name = nil
+    end
+    return changed
+end
+
+--[[
+    Manually removes the lightroom file to associate with a database key
+--]]
+function PMIDatabase.ClearLightroomFile(key)
+    local changed = false; 
+    local entry = PMIDatabase.MetaData[key]
+    if entry ~= nil and entry.pmi.category == 'file' then
+        changed = entry.lr.id ~= nil
+        if changed then
+            entry.lr.id = nil
+            entry.lr.category = nil
+        end
+    end
+    return changed
+end
+
+--[[
+    Manually associates a lightroom file to a database entry
+--]]
+function PMIDatabase.SetFile(key, file)
+    local changed = false; 
+    local entry = PMIDatabase.MetaData[key]
+    if file ~= nil then
+        local uuid = file:getRawMetadata("uuid")
+        changed = entry.lr.id ~= uuid
+        if changed then
+            entry.lr.id = uuid
+            entry.lr.name = file:getFormattedMetadata("fileName")
+            if file:getRawMetadata("isVideo") then
+                entry.lr.category = 'video'
+            else
+                entry.lr.category = 'image'
+            end
+        end
+    else
+        changed = entry.lr.id ~= nil
+        if changed then
+            entry.lr.name = nil
+            entry.lr.id = nil
+            entry.lr.category = nil
+        end
+    end
+    return changed
+end
+
+--[[
+    Query the Database's state
+]]--
+function PMIDatabase.IsEmpty()
+    return PMIDatabase.MetaData == nil or next(PMIDatabase.MetaData) == nil
 end
 
 --[[
