@@ -104,7 +104,7 @@
 "$$$/PMI/PreferenceManager/PreferencesPanel/General=General"
 "$$$/PMI/PreferenceManager/PreferencesPanel/Preferences/Export/Export/Tip=Export the preferences to a file."
 "$$$/PMI/PreferenceManager/PreferencesPanel/Preferences/Export/Export/Title=Export..."
-"$$$/PMI/PreferenceManager/PreferencesPanel/Preferences/Reset/Confirm/Message=This will reset all the plug-in^}s user preferences to default values.
+"$$$/PMI/PreferenceManager/PreferencesPanel/Preferences/Reset/Confirm/Message=This will reset all the plug-in^}s user preferences to default values."
 "$$$/PMI/PreferenceManager/PreferencesPanel/Preferences/Reset/Confirm/Title=Reset your preferences?"
 "$$$/PMI/PreferenceManager/PreferencesPanel/Preferences/Reset/Reset/Tip=Reset all user preferences to default values."
 "$$$/PMI/PreferenceManager/PreferencesPanel/Preferences/Reset/Reset/Title=Reset..."
@@ -140,7 +140,7 @@
 "$$$/PMI/SelectFileDialog/ProgressDialog/ProcessingResults=Processing Search Results..."
 "$$$/PMI/SelectFileDialog/ProgressDialog/Querying=Querying Lightroom"s Database..."
 "$$$/PMI/SelectFileDialog/Search/Action=Search..."
-"$$$/PMI/SelectFileDialog/Search/Tip=Search the Lightroom database using the current search text and the selected search options.",
+"$$$/PMI/SelectFileDialog/Search/Tip=Search the Lightroom database using the current search text and the selected search options."
 "$$$/PMI/SelectFileDialog/SearchOp/ContainingAll=contains all"
 "$$$/PMI/SelectFileDialog/SearchOp/ContainingAny=contains"
 "$$$/PMI/SelectFileDialog/SearchOp/EndingWith=ends with"
