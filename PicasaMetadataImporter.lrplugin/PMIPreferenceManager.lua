@@ -3,7 +3,7 @@
 --------------------------------------------------------------------------------
 
 PMIPreferenceManager.lua
-Lightroom Plug-in Info Provider for Picasa Metadata Importer plug-in.
+Lightroom Plug-in Preference Manager for Picasa Metadata Importer plug-in.
 
 --------------------------------------------------------------------------------
 
@@ -59,6 +59,37 @@ PMIPreferenceManager.ImportTypes = {
     Recursion guard for selection
 ]]--
 local recursionGuard = LrRecursionGuard ("selection")
+
+--[[
+    Saves the Database to a files
+]]--
+local function ResetPreferences()
+    if LrDialogs.confirm(LOC '$$$/PMI/PreferenceManager/PreferencesPanel/Preferences/Reset/Confirm/Title=<Title>', LOC '$$$/PMI/PreferenceManager/PreferencesPanel/Preferences/Reset/Confirm/Message=<Message>', LOC '$$$/PMI/Misc/Ok=<Ok>', LOC '$$$/PMI/Misc/Cancel=<Cancel>') == LOC '$$$/PMI/Misc/Ok=<Ok>' then
+        PMIPreferenceManager.ClearPreferences()
+        PMIPreferenceManager.InitPreferences()
+    end
+end
+
+--[[
+    Saves the Database to a files
+]]--
+local function SavePreferences(filename)
+    if filename ~= nil then
+        pmiUtil.Save(filename, LrPrefs)
+    else
+        local path = LrDialogs.runSavePanel {
+            title = LOC '$$$/PMI/PreferenceManager/PreferencesPanel/Preferences/Export/ExportDialog/Title=<Title>',
+            requiredFileType = 'lua',
+            canChooseFiles = true,
+            canChooseDirectories = false,
+            canCreateDirectories = true,
+            allowsMultipleSelection = false,
+        }
+        if path ~= nil then
+            SavePreferences(path)
+        end        
+    end
+end
 
 --[[
     Access to Lightroom Preferences
@@ -649,19 +680,12 @@ function PMIPreferenceManager.GetPreferencesPanel( f, properties )
             f:push_button {
                 title = LOC '$$$/PMI/PreferenceManager/PreferencesPanel/Preferences/Export/Export/Title=<Title>',
                 tooltip = LOC '$$$/PMI/PreferenceManager/PreferencesPanel/Preferences/Export/Export/Tip=<Tip>',
-                action = function() 
-                    pmiUtil.Save("D:\\pref.lua", LrPrefs)
-                end,
+                action  = function() SavePreferences() end,
             },              
             f:push_button {
                 title = LOC '$$$/PMI/PreferenceManager/PreferencesPanel/Preferences/Reset/Reset/Title=<Title>',
                 tooltip = LOC '$$$/PMI/PreferenceManager/PreferencesPanel/Preferences/Reset/Reset/Tip=<Tip>',
-                action = function() 
-                    if LrDialogs.confirm(LOC '$$$/PMI/PreferenceManager/PreferencesPanel/Preferences/Reset/Confirm/Title=<Title>', '$$$/PMI/PreferenceManager/PreferencesPanel/Preferences/Reset/Confirm/Message=<Message>', LOC '$$$/PMI/Misc/Ok=<Ok>', LOC '$$$/PMI/Misc/Cancel=<Cancel>') == LOC '$$$/PMI/Misc/Ok=<Ok>' then
-                        PMIPreferenceManager.ClearPreferences()
-                        PMIPreferenceManager.InitPreferences()
-                    end
-                end,
+                action = function() ResetPreferences() end,
             },           
         }
     }
