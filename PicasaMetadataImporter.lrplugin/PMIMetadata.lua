@@ -62,6 +62,7 @@ PMIMetadata.MetadataKeys = {
             template = 'Metadata_File_.+_template',
             uuid     = 'Metadata_File_.+_uuid',
             override = 'Metadata_File_.+_override',
+            file     = 'Metadata_File_.+_file',
         },
         album = 
         {

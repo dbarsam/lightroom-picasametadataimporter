@@ -152,6 +152,7 @@ local function UpdateFile(database, properties, key)
         local propkeys = pmiMetadata.MetadataKeys.file
         local fselected = string.gsub(propkeys.selected,"%.%+", key)
         local fname = string.gsub(propkeys.name,"%.%+", key)
+        local ffile = string.gsub(propkeys.file,"%.%+", key)
         local fenabled = string.gsub(propkeys.enabled,"%.%+", key)
         local fuuid = string.gsub(propkeys.uuid,"%.%+", key)
         local foverride = string.gsub(propkeys.override,"%.%+", key)
@@ -159,8 +160,10 @@ local function UpdateFile(database, properties, key)
         properties[fenabled] = data.lr.id ~= nil
         properties[fselected] = false
         properties[fname] = data.pc.name
-        properties[fuuid] = data.lr.id and data.lr.id or LOC "$$$/PMI/SelectMetadataDialog/View/Error/FileNotFound=<File Not Found>"         
+        properties[ffile] = data.lr.name
         properties[foverride] = data.lr.name and (data.lr.name:lower() ~= data.pc.name:lower()) or false
+        properties[fuuid] = data.lr.id and data.lr.id or LOC "$$$/PMI/SelectMetadataDialog/View/Error/FileNotFound=<File Not Found>"         
+        properties[ffile] = data.lr.id and data.lr.name or LOC "$$$/PMI/SelectMetadataDialog/View/Error/FileNotFound=<File Not Found>"
     end
 end
 
@@ -530,6 +533,123 @@ local function GetFileView(f, properties, keys, database)
 end
 
 --[[
+    The Missing File View
+]]--
+local function GetMissingFileView(f, properties, keys, database)
+
+    local propkeys = pmiMetadata.MetadataKeys.file
+    local userMode = pmiPrefs.GetPref('UserMode')
+
+    properties[propkeys.header] = false
+    properties:addObserver( propkeys.header, headerSelected )
+
+    local view = {    
+        spacing = f:control_spacing(),
+        margin_horizontal = 10,
+        f:row {
+            fill_horizontal = 1,
+            font = '<system/small/bold>',
+            f:static_text {
+                fill_vertical = 1,
+                title = LOC('$$$/PMI/SelectMetadataDialog/MissingFileView/Header/Picasa=<Picasa>'),
+                width = LrView.share 'picasa_metadata_title_width_missingfile',
+            },                              
+            f:static_text {
+                fill_vertical = 1,
+                title = LOC('$$$/PMI/SelectMetadataDialog/MissingFileView/Header/Lightroom=<Lightroom>'),
+                width = LrView.share 'picasa_metadata_title_width_missingfile',
+            },
+            f:static_text {
+                fill_vertical = 1,
+                title = "",
+                width = LrView.share 'picasa_metadata_title_width_uuidbrowse',
+            },                       
+            f:static_text {
+                fill_vertical = 1,
+                title = "",
+                width = LrView.share 'picasa_metadata_title_width_uuidbrowse',
+            },              
+        }
+    }
+
+    for i,fkey in ipairs(keys.file) do 
+        local data = database.MetaData[fkey]
+        if data.lr.id == nil then
+            local fselected = string.gsub(propkeys.selected,"%.%+", fkey)
+            local fname = string.gsub(propkeys.name,"%.%+", fkey)
+            local ffile = string.gsub(propkeys.file,"%.%+", fkey)
+            local fenabled = string.gsub(propkeys.enabled,"%.%+", fkey)
+            local fuuid = string.gsub(propkeys.uuid,"%.%+", fkey)
+            local foverride = string.gsub(propkeys.override,"%.%+", fkey)
+            properties[fenabled] = data.lr.id ~= nil
+            properties[fselected] = false
+            properties[fname] = data.pc.name
+            properties[foverride] = data.lr.name and (data.lr.name:lower() ~= data.pc.name:lower()) or false
+            properties[fuuid] = data.lr.id and data.lr.id or LOC "$$$/PMI/SelectMetadataDialog/View/Error/FileNotFound=<File Not Found>"
+            properties[ffile] = data.lr.id and data.lr.name or LOC "$$$/PMI/SelectMetadataDialog/View/Error/FileNotFound=<File Not Found>"
+     
+            properties:addObserver(fselected, itemSelected)         
+
+            -- Build the Header Rows
+            local headRows = {
+                size = "mini",
+                spacing = f:label_spacing()
+            }
+           
+            -- Push a Name Checkbox
+            local nameRow = f:row {
+                f:static_text {
+                    title   = LrView.bind (fname),
+                    tooltip = LrView.bind (fname),
+                    width   = LrView.share 'picasa_metadata_title_width_missingfile',
+                },
+                f:static_text {
+                    title   = LrView.bind (ffile),
+                    tooltip = LrView.bind (ffile),
+                    width   = LrView.share 'picasa_metadata_title_width_missingfile',
+                    text_color = LrView.bind {
+                        key = foverride,
+                        transform = function(value, fromTable) 
+                            return value and LrColor('red') or LrColor()
+                        end 
+                    },                    
+                },
+                f:push_button {
+                    title   = LOC '$$$/PMI/SelectMetadataDialog/View/Choose/Action=<Action>',
+                    tooltip = LOC '$$$/PMI/SelectMetadataDialog/View/Choose/Tip=<Tip>',
+                    width   = LrView.share 'picasa_metadata_title_width_uuidbrowse',
+                    action  = function() SelectFile(database, properties, fkey) end,
+                },  
+                f:push_button {
+                    title   = LOC '$$$/PMI/SelectMetadataDialog/View/Reset/Action=<Action>',
+                    tooltip = LOC '$$$/PMI/SelectMetadataDialog/View/Reset/Tip=<Tip>',
+                    width   = LrView.share 'picasa_metadata_title_width_uuidbrowse',
+                    action  = function() ResetFile(database, properties, fkey) end,
+                    enabled = LrView.bind (foverride),
+                },                 
+
+            }
+
+            table.insert(headRows,nameRow)
+
+            -- Final File Row
+            local fileRow = f:row {
+                f:column( headRows ),
+            }
+            table.insert(view, fileRow)
+
+            -- Push the Separator
+            local separator = f:row {
+                f:separator { fill_horizontal = 1, },
+            }        
+            table.insert(view, separator)        
+        end
+    end    
+    
+    return view
+end
+
+--[[
     Main 'Show' function of the PMISelectMetadataDialog
 ]]--
 function PMISelectMetadataDialog.Show(database)
@@ -623,6 +743,18 @@ function PMISelectMetadataDialog.Show(database)
                 },
             })
         end
+        if (#database.MissingFiles > 0 and userMode == pmiPrefs.UserModes.Advanced)then
+            table.insert(subviews, {
+                identifier = LOC '$$$/PMI/Misc/MissingFiles=<MissingFiles>',
+                title = LOC '$$$/PMI/Misc/MissingFiles=<MissingFiles>',
+                f:scrolled_view {
+                    width = pmiPrefs.GetPref('ScrollViewWidth'),            
+                    height = pmiPrefs.GetPref('ScrollViewHeight'),
+                    bind_to_object = props,
+                    f:column ( GetMissingFileView(f, props, keys, database) ),
+                },
+            })
+        end        
         if #subviews > 1 then
             local tabviews = pmiUtil.Map(subviews, function(v) return f:tab_view_item(v) end)
             table.insert(view, f:tab_view(tabviews))
