@@ -30,6 +30,7 @@ local logger = LrLogger( 'PMIImporter' )
 logger:enable("print") -- "print" or "logfile"
 
 -- Access the PMI SDK namespaces.
+local pmiPrefs        = require "PMIPreferenceManager"
 local pmiUtil         = require "PMIUtil"
 
 --[[
@@ -93,7 +94,7 @@ local function showReportDialog(lines)
             f:scrolled_view {
                 fill_horizonal = 1,
                 font = '<system/small>',
-                width = pmiPrefs.GetPref('ScrollViewWidth'),            
+                width = pmiPrefs.GetPref('ScrollViewWidth'),
                 height = pmiPrefs.GetPref('ScrollViewHeight'),
                 f:column ( rows )
             }
@@ -220,7 +221,7 @@ function PMIImporter.Import(database, filter)
                     local rMetadata = photo:getRawMetadata()
                     for k, v in pairs(rkeys) do
                         local oldvalue = fMetadata[k] and fMetadata[k] or rMetadata[k]
-                        table.insert(localreport, '\t' .. LOC("$$$/PMI/Importer/Report/File/Property", tostring(k), tostring(oldvalue), tostring(v.value)))
+                        table.insert(localreport, '\t' .. LOC("$$$/PMI/Importer/Report/File/Property=<Property>", tostring(k), tostring(oldvalue), tostring(v.value)))
                         catalog:withWriteAccessDo( 'Adding Photos to Collection', function( context )
                             photo:setRawMetadata( k, v.value )
                         end)
@@ -229,7 +230,7 @@ function PMIImporter.Import(database, filter)
 
                 -- Merge the local report into the master report
                 if #localreport > 0 then
-                    table.insert(report, '\t' .. LOC("$$$/PMI/Importer/Report/File/Property=<Property>", tostring(info.pc.name)))
+                    table.insert(report, LOC("$$$/PMI/Importer/Report/File/Title=<Title>", tostring(info.pc.name)))
                     for _, line in ipairs(localreport) do
                         table.insert(report, line)
                     end
