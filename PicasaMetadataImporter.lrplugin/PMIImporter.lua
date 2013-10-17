@@ -220,10 +220,10 @@ function PMIImporter.Import(database, filter)
                     local fMetadata = photo:getFormattedMetadata()
                     local rMetadata = photo:getRawMetadata()
                     for k, v in pairs(rkeys) do
-                        local oldvalue = fMetadata[k] and fMetadata[k] or rMetadata[k]
-                        table.insert(localreport, '\t' .. LOC("$$$/PMI/Importer/Report/File/Property=<Property>", tostring(k), tostring(oldvalue), tostring(v.value)))
+                        local oldvalue = fMetadata[v.name] and fMetadata[v.name] or rMetadata[v.name]
+                        table.insert(localreport, '\t' .. LOC("$$$/PMI/Importer/Report/File/Property=<Property>", tostring(k), tostring(v.name), tostring(oldvalue), tostring(v.value)))
                         catalog:withWriteAccessDo( 'Adding Photos to Collection', function( context )
-                            photo:setRawMetadata( k, v.value )
+                            photo:setRawMetadata( v.name, v.value )
                         end)
                     end
                 end
